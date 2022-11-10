@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/nimacortez/tinyapp/issues"
   },
-  "homepage": "https://github.com/nimacortez/tinyapp#readme"
+  "homepage": "https://github.com/nimacortez/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
