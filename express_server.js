@@ -21,9 +21,30 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur",
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk",
+  },
+};
+
 app.use(express.urlencoded({ extended: true }));
 
 //GET
+
+//register
+app.get("/register", (req, res) => {
+  const templateVars = {
+    user: users[req.session]
+  };
+  res.render("urls_registration", templateVars);
+});
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -55,11 +76,36 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id]}; /* What goes here? */
+  const templateVars = { 
+    id: req.params.id, 
+    longURL: urlDatabase[req.params.id]};
   res.render("urls_show", templateVars)
 });
 
+
 //POST
+
+//register new user
+app.post("/register", (req, res) => {
+  const newUserID = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  const userObj = {
+    id: newUserID,
+    email: email,
+    password: bcrypt.hashSync(password, saltRounds)
+  };
+  const userEmail = findEmail(email, users);
+  if (userObj.email === "" || userObj.password === "") {
+    res.status(400).send("400 error! Please Provide Your Information");
+  } else if (!userEmail) {
+    users[newUserID] = userObj;
+    req.session["userID"] = newUserID;
+    res.redirect("/urls");
+  } else {
+    res.status(400).send("400 error! Please Login");
+  }
+});
 
 //random string and add urls to database
 app.post("/urls", (req, res) => {
@@ -73,6 +119,14 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   res.redirect(longURL);
 });
+
+//edit
+app.post("/urls/:id", (req, res) => {
+    const shortURL = req.params.id 
+    const longURL = req.body.longURL;
+    urlDatabase[shortURL] = longURL;
+    res.redirect('/urls');
+});   
 
 
 //delete urls
