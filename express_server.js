@@ -73,7 +73,14 @@ app.get("/urls", (req, res) => {
 
 //new URLs
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    user: users[req.session["userID"]]
+  };
+  if (!req.session.userID) {
+    res.redirect("/login");
+  } else {
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -133,18 +140,26 @@ app.get("/u/:id", (req, res) => {
 
 //edit
 app.post("/urls/:id", (req, res) => {
+  if (urlDatabase[req.params.id].userID === req.session["userID"]) {
     const shortURL = req.params.id 
     const longURL = req.body.longURL;
     urlDatabase[shortURL] = longURL;
     res.redirect('/urls');
+  } else {
+    res.status(403).send("Not permitted");
+  }
 });   
 
 
 //delete urls
 app.post("/urls/:shortURL/delete", (req, res) => {
   console.log(urlDatabase[req.params.shortURL]);
+  if (urlDatabase[req.params.shortURL].userID === req.session["userID"]) {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
+  } else {
+    res.status(403).send("Not permitted");
+  }
 });
 
 //login
