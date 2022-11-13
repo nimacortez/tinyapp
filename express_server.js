@@ -5,6 +5,9 @@ const PORT = 8080; // default port 8080
 //ejs
 app.set("view engine", "ejs");
 
+const bcrypt = require("bcryptjs");
+const saltRounds = 10;
+
 const { generateRandomString,findEmail, findPassword, findUserID, urlsForUser } = require("./helpers");
 
 //database
@@ -19,7 +22,7 @@ const users = {
   currentUser: {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur",
+    password: bcrypt.hashSync("2", saltRounds),
   },
 };
 
@@ -111,7 +114,7 @@ app.post("/register", (req, res) => {
   const userObj = {
     id: newUserID,
     email: email,
-    password: password
+    password: bcrypt.hashSync(password, saltRounds)
   };
   const userEmail = findEmail(email, users);
   if (userObj.email === "" || userObj.password === "") {
@@ -169,7 +172,7 @@ app.post("/login", (req, res) => {
   const userEmail = findEmail(email, users);
   const userPassword = findPassword(email, users);
   if (email === userEmail) {
-    if (password(password, userPassword)) {
+    if (bcrypt.compareSync(password, userPassword)) {
       const userID = findUserID(email, users);
       req.session["userID"] = userID;
       res.redirect("/urls");
