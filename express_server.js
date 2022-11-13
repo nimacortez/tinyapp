@@ -5,15 +5,7 @@ const PORT = 8080; // default port 8080
 //ejs
 app.set("view engine", "ejs");
 
-const generateRandomString = () => {
-  const alphaNumerical = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let result = '';
-  for (let i = 0; i < 6; i++) {
-    result += alphaNumerical.charAt(Math.floor(Math.random() * alphaNumerical.length));
-  }
-  return result;
-};
-
+const { generateRandomString,findEmail, findPassword, findUserID, urlsForUser } = require("./helpers");
 
 //database
 const urlDatabase = {
@@ -21,22 +13,28 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
+//userDatabase
 const users = {
-  userRandomID: {
+  currentUser: {
     id: "userRandomID",
     email: "user@example.com",
     password: "purple-monkey-dinosaur",
   },
-  user2RandomID: {
-    id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk",
-  },
 };
 
-app.use(express.urlencoded({ extended: true }));
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: true }));
 
 //GET
+
+//login
+app.get("/login", (req, res) => {
+  const templateVars = {
+    user: users[req.session]
+  };
+  res.render("urls_login", templateVars);
+});
 
 //register
 app.get("/register", (req, res) => {
@@ -59,13 +57,16 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp app listening on port ${PORT}!`);
 });
 
 
 //main page
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    urls: urlsForUser(req.session, urlDatabase),
+    user: users[req.session]
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -76,10 +77,20 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!req.session["userID"]) {
+    res.status(400).send("400 error! Please Login or Register");
+  } else if (!urlDatabase[req.params.shortURL]) {
+    res.status(404).send("404 not found! This URL doesn't exist");
+  } else if (urlDatabase[req.params.shortURL].userID === req.session["userID"]) {
   const templateVars = { 
     id: req.params.id, 
     longURL: urlDatabase[req.params.id]};
   res.render("urls_show", templateVars)
+} else if (urlDatabase[req.params.shortURL].userID !== req.session["userID"]) {
+  res.status(403).send("403 error! This is not your URL");
+} else {
+  res.status(400).send("400 error! Please Login");
+}
 });
 
 
@@ -93,7 +104,7 @@ app.post("/register", (req, res) => {
   const userObj = {
     id: newUserID,
     email: email,
-    password: bcrypt.hashSync(password, saltRounds)
+    password: password
   };
   const userEmail = findEmail(email, users);
   if (userObj.email === "" || userObj.password === "") {
@@ -133,5 +144,30 @@ app.post("/urls/:id", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   console.log(urlDatabase[req.params.shortURL]);
   delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+});
+
+//login
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+  const userEmail = findEmail(email, users);
+  const userPassword = findPassword(email, users);
+  if (email === userEmail) {
+    if (password(password, userPassword)) {
+      const userID = findUserID(email, users);
+      req.session["userID"] = userID;
+      res.redirect("/urls");
+    } else {
+      res.status(403).send("403 Forbidden: Wrong Password");
+    }
+  } else {
+    res.status(403).send("403 Forbidden : Please Register");
+  }
+});
+
+//logout
+app.post("/logout", (req, res) => {
+  req.session["userID"] = null;
   res.redirect("/urls");
 });
