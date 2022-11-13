@@ -5,6 +5,8 @@ const PORT = 8080; // default port 8080
 //ejs
 app.set("view engine", "ejs");
 
+const cookieSession = require('cookie-session');
+
 const bcrypt = require("bcryptjs");
 const saltRounds = 10;
 
