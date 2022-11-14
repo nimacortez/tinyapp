@@ -6,11 +6,18 @@ const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
 const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: ['userID']
+}));
+
+const bodyParser = require("body-parser");
+app.use(bodyParser.urlencoded({ extended: true }));
 
 const bcrypt = require("bcryptjs");
 const saltRounds = 10;
 
-const { generateRandomString,findEmail, findPassword, findUserID, urlsForUser } = require("./helpers");
+const { generateRandomString,findEmail, findPassword, findUserID, urlsForUser, getUserByEmail } = require("./helpers");
 
 //database
 const urlDatabase = {
@@ -28,8 +35,6 @@ const users = {
   },
 };
 
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({ extended: true }));
 
 //GET
 
@@ -69,10 +74,14 @@ app.listen(PORT, () => {
 //main page
 app.get("/urls", (req, res) => {
   const templateVars = {
-    urls: urlsForUser(req.session, urlDatabase),
-    user: users[req.session]
+    urls: urlsForUser(req.session["userID"], urlDatabase),
+    user: users[req.session["userID"]]
   };
-  res.render("urls_index", templateVars);
+  if (!req.session.userID) {
+    res.redirect("/login");
+  } else {
+    res.render("urls_index", templateVars);
+  }
 });
 
 

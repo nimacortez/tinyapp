@@ -37,12 +37,22 @@ const findPassword = (email, database) => {
 const urlsForUser = (id, database) => {
   const userURLs = {};
   for (let url in database) {
-    if (id === database[url].user) {
+    if (id === database[url].userID) {
       userURLs[url] = database[url];
     }
   }
   return userURLs;
 };
 
+const getUserByEmail = (email, database) => {
+  for (let key in database) {
+    if (database[key].email === email) {
+      return database[key];
+    }
+  }
+  return undefined;
+};
 
-module.exports = { generateRandomString,findEmail, findPassword, findUserID, urlsForUser };
+
+
+module.exports = { generateRandomString,findEmail, findPassword, findUserID, urlsForUser, getUserByEmail };

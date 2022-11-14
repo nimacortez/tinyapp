@@ -16,7 +16,7 @@
     <title>TinyApp</title>
   </head>
   <body>
-    <% if (user) { %>
+    <%- include('partials/_header') %>
     <main style="margin: 1em;">
       <h3>My URLs</h3>
       <table class="table">
@@ -46,13 +46,6 @@
         </tbody>
       </table>
     </main>
-    <% } else { %>
-      <div>
-       <h3>
-        <a href="/login" >Login </a>or <a href="/register" >Register </a>to see your URLS. 
-       </h3>
-       </div>
-      <% } %>
     <!-- Bootstrap JS -->
     <script
       src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
