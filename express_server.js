@@ -94,21 +94,21 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const userID = req.session["userID"];
+  const user = users[userID];
   if (!req.session["userID"]) {
     res.status(400).send("400 error! Please Login or Register");
-  } else if (!urlDatabase[req.params.shortURL]) {
+  } else if (!urlDatabase[shortURL]) {
     res.status(404).send("404 not found! This URL doesn't exist");
-  } else if (
-    urlDatabase[req.params.shortURL].userID === req.session["userID"]
-  ) {
+  } else if (urlDatabase[shortURL].userID === req.session["userID"]) {
     const templateVars = {
-      id: req.params.id,
-      longURL: urlDatabase[req.params.id],
+      id: shortURL,
+      longURL: urlDatabase[shortURL].longURL,
+      user,
     };
     res.render("urls_show", templateVars);
-  } else if (
-    urlDatabase[req.params.shortURL].userID !== req.session["userID"]
-  ) {
+  } else if (urlDatabase[shortURL].userID !== req.session["userID"]) {
     res.status(403).send("403 error! This is not your URL");
   } else {
     res.status(400).send("400 error! Please Login");
@@ -116,7 +116,8 @@ app.get("/urls/:id", (req, res) => {
 });
 
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  const shortURL = req.params.id;
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
