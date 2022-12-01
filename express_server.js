@@ -161,7 +161,7 @@ app.post("/urls/:id", (req, res) => {
   if (urlDatabase[req.params.id].userID === req.session["userID"]) {
     const shortURL = req.params.id;
     const longURL = req.body.longURL;
-    urlDatabase[shortURL] = longURL;
+    urlDatabase[shortURL].longURL = longURL;
     res.redirect("/urls");
   } else {
     res.status(403).send("Not permitted");
